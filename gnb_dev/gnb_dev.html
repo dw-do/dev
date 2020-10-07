@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>GNB DEV</title>
+	<script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+			font-family: Arial, Helvetica, sans-serif;
+			color: #000;
+			list-style: none;
+		}
+		a {
+			text-decoration: none;
+		}
+		.nav {
+			text-align: center;
+		}
+		.nav > ul:after {
+			display: block;
+			clear: both;
+			content: "";
+		}
+		.nav > ul > li {
+			display: inline-block;
+			position: relative;
+		}
+		.nav-dp1-anchor {
+			display: block;
+			padding: 20px;
+		}
+		.nav-dp1-anchor.active {
+			color: skyblue;
+		}
+		.nav-sub {
+			display: none;
+			width: 100%;
+			position: absolute;
+			top: 58px;
+			left: 50%;
+			transform: translateX(-50%);
+			border: 1px solid #ccc;
+			padding: 10px;
+			opacity: 0;
+			transition: opacity 1s;
+		}
+		.nav-sub.active {
+			display: block;
+			opacity: 1;
+			background: #ccc;
+		}
+		.nav-btn {
+			display: none;
+		}
+
+		@media only screen and (max-width: 1200px) {
+			header {
+				position: relative;
+				padding-top: 30px;
+			}
+			.nav {
+				display: none;
+				position: absolute;
+				right: -100%;
+				width: 80%;
+				text-align: left;
+				background-color: #ddd;
+			}
+			.nav.active {
+				display: block;
+				right: 0;
+			}
+			.nav-sub {
+				position: static;
+				transform: translateX(0);
+			}
+			.nav-btn {
+				display: block;
+				position: absolute;
+				top: 0;
+				right: -0;
+				z-index: 1;
+			}
+			.nav > ul > li {
+			    display: block;
+    			position: relative;
+			}
+		}
+	</style>
+</head>
+<body>
+	<header>
+		<button class="nav-btn">button</button>
+		<nav class="nav">
+			<ul>
+				<li>
+					<a href="/" class="nav-dp1-anchor">dp1 Menu01</a>
+					<ul class="nav-sub">
+						<li><a href="/">dp2 Menu01</a></li>
+						<li><a href="/">dp2 Menu02</a></li>
+						<li><a href="/">dp2 Menu03</a></li>
+						<li><a href="/">dp2 Menu04</a></li>
+					</ul>
+				</li>
+				<li>
+					<a href="/" class="nav-dp1-anchor">dp1 Menu01</a>
+					<ul class="nav-sub">
+						<li><a href="/">dp2 Menu03</a></li>
+						<li><a href="/">dp2 Menu04</a></li>
+						<li><a href="/">dp2 Menu05</a></li>
+						<li><a href="/">dp2 Menu06</a></li>
+					</ul>
+				</li>
+				<li>
+					<a href="/" class="nav-dp1-anchor">dp1 Menu01</a>
+					<ul class="nav-sub">
+						<li><a href="/">dp2 Menu07</a></li>
+						<li><a href="/">dp2 Menu08</a></li>
+						<li><a href="/">dp2 Menu09</a></li>
+						<li><a href="/">dp2 Menu10</a></li>
+					</ul>
+				</li>
+				<li>
+					<a href="/" class="nav-dp1-anchor">dp1 Menu01</a>
+					<ul class="nav-sub">
+						<li><a href="/">dp2 Menu11</a></li>
+						<li><a href="/">dp2 Menu12</a></li>
+						<li><a href="/">dp2 Menu13</a></li>
+						<li><a href="/">dp2 Menu14</a></li>
+					</ul>
+				</li>
+				<li>
+					<a href="/" class="nav-dp1-anchor">dp1 Menu05</a>
+					<!-- <ul class="nav-sub">
+						<li><a href="/">dp2 Menu15</a></li>
+						<li><a href="/">dp2 Menu16</a></li>
+						<li><a href="/">dp2 Menu17</a></li>
+						<li><a href="/">dp2 Menu18</a></li>
+					</ul> -->
+				</li>
+				<li>
+					<a href="/" class="nav-dp1-anchor">dp1 Menu06</a>
+					<ul class="nav-sub">
+						<li><a href="/">dp2 Menu19</a></li>
+						<li><a href="/">dp2 Menu20</a></li>
+						<li><a href="/">dp2 Menu21</a></li>
+						<li><a href="/">dp2 Menu22</a></li>
+					</ul>
+				</li>
+			</ul>
+		</nav>
+	</header>
+	<script>
+		let className = {
+			ACTIVE: 'active'
+		};
+
+		let $WINDOW = window,
+			$DOCUMENT = document,
+			WINDOW_WIDTH = $WINDOW.innerWidth || $DOCUMENT.documentElement.clientWidth || $DOCUMENT.body.clientWidth,
+			WINDOW_HEIGHT = $WINDOW.innerHeight || $DOCUMENT.documentElement.clientHeight || $DOCUMENT.body.clientHeight,
+			SCROLLTOP_POS = ($WINDOW.pageYOffset || $DOCUMENT.documentElement.scrollTop) - ($DOCUMENT.clientTop || 0);
+
+		let isMobile,
+			isTablet,
+			isPc,
+			isMinHeight;
+
+		let gnb = (function() {
+			let $header = document.querySelector('header'),
+				$nav = document.querySelector('.nav'),
+				$navItem = document.querySelectorAll('.nav > ul > li'),
+				$navDp1Anchor = document.querySelectorAll('.nav-dp1-anchor'),
+				$navSub = document.querySelectorAll('.nav-sub');
+
+			// init
+			function init() {
+				Array.prototype.forEach.call($navSub, function(el, i) {
+					el.setAttribute('role', 'region');
+					el.setAttribute('aria-hidden', true);
+					el.setAttribute('aria-expanded', false);
+				});
+			}
+		
+			function navOpen(target, tgIdx) {
+				let $this = target;
+				
+				if ($this.classList.contains(className.ACTIVE)) return false;
+
+				// in active
+				Array.prototype.forEach.call($navDp1Anchor, function(el) {
+					el.classList.remove(className.ACTIVE);
+				});
+				Array.prototype.forEach.call($navSub, function(el) {
+					el.classList.remove(className.ACTIVE);
+					el.setAttribute('aria-hidden', true);
+					el.setAttribute('aria-expanded', false);
+				});
+
+				// active
+				$this.classList.add(className.ACTIVE);
+				if ($navItem[tgIdx].querySelector('.nav-sub') !== null) {
+					$navItem[tgIdx].querySelector('.nav-sub').classList.add(className.ACTIVE);
+					$navItem[tgIdx].querySelector('.nav-sub').setAttribute('aria-hidden', false);
+					$navItem[tgIdx].querySelector('.nav-sub').setAttribute('aria-expanded', true);
+				}
+			}
+
+			function navClose() {
+				Array.prototype.forEach.call($navDp1Anchor, function(el) {
+					el.classList.remove(className.ACTIVE);
+				});
+				Array.prototype.forEach.call($navSub, function(el) {
+					el.setAttribute('aria-hidden', true);
+					el.setAttribute('aria-expanded', false);
+					el.classList.remove(className.ACTIVE);
+				});
+			}
+
+			function execution(e) {
+				let tgIdxEl = this.parentNode,
+					tgIdx = getTgIdx(tgIdxEl) - 1;
+
+				navOpen(this, tgIdx);
+
+				if (tgIdx == 0) if (e.shiftKey && e.key === 'Tab') navClose();
+				e.preventDefault();
+			}
+
+			function reset() {
+
+			}
+
+			// util function
+			function getTgIdx(el) {
+				let i = 0;
+				if (!el) return - 1;
+				do {
+					i++;
+				} while (el = el.previousElementSibling);
+				return i;
+			}
+			function getSibligns(el) {
+				Array.prototype.filter.call(el.parentNode.children, function(child) {
+					return child !== el;
+				});
+			}
+
+			return {
+				init: function() {
+					init();
+				},
+				navExePc: function() {
+					Array.prototype.forEach.call($navDp1Anchor, function(el) {
+						el.addEventListener('mouseenter', execution);
+						el.addEventListener('focusin', execution);
+						el.addEventListener('keydown', execution);
+						
+						el.removeEventListener('click', execution);
+					});
+					$header.addEventListener('mouseleave', navClose);
+				},
+				navExeTablet: function() {
+					Array.prototype.forEach.call($navDp1Anchor, function(el) {
+						el.addEventListener('click', execution);
+						
+						el.removeEventListener('mouseenter', execution);
+						el.removeEventListener('focusin',execution);
+						el.removeEventListener('keydown', execution);
+					});
+					$header.removeEventListener('mouseleave', navClose);
+				}
+			}
+		})();
+		gnb.init();
+		
+
+		let setLayout = (function() {
+			let mobileCheckPoint = 703,
+				tabletCheckPoint = 1184;
+
+			function checkDevice() {
+				if (WINDOW_WIDTH >= tabletCheckPoint) {
+					isMobile = false;
+					isTablet = false;
+					isPc = true;
+				} else if (WINDOW_WIDTH > mobileCheckPoint && WINDOW_WIDTH < tabletCheckPoint) {
+					isMobile = false;
+					isTablet = true;
+					isPc= false;
+				} else {
+					isMobile = true;
+					isTablet = false;
+					isPc= false;
+				}
+			}
+			function execution() {
+				if (isPc) {
+					gnb.navExePc();
+				}
+				if (isTablet) {
+					gnb.navExeTablet();
+				}
+				if (isMobile) {
+					gnb.navExeTablet();
+				}
+			}
+			return {
+				checkDevice: function() {
+					checkDevice();
+				},
+				execution: function() {
+					execution();
+				}
+			}			
+		})();
+		setLayout.checkDevice();
+		setLayout.execution();
+
+		let toggleOpen = function() {
+			let $navBtn = document.querySelector('.nav-btn'),
+				$nav = document.querySelector('.nav');
+
+				$navBtn.addEventListener('click', function(e) {
+					if (this.classList.contains(className.ACTIVE)) {
+						this.classList.remove(className.ACTIVE);
+						$nav.classList.remove(className.ACTIVE);
+					} else {
+						this.classList.add(className.ACTIVE);
+						$nav.classList.add(className.ACTIVE);
+					}
+				});
+		}
+		toggleOpen();
+
+		// window event (resize: debounce, scroll: throttle)
+		let TIME = {
+			resizeTime: null,
+			scrollTime: null,
+			resizeTimeout: false,
+			delay: 100
+		};
+
+		$WINDOW.addEventListener('resize', function() {
+			TIME.resizeTime = new Date();
+			if (TIME.resizeTimeout === false) {
+				TIME.resizeTimeout = true;
+				setTimeout(resizeEndCall, TIME.delay);
+			}
+		});
+		$WINDOW.addEventListener('scroll', function() {
+			if (!TIME.scrollTime) {
+				TIME.scrollTime = setTimeout(function() {
+					TIME.scrollTime = null;
+					scrollingCall();
+				}, TIME.delay);
+			}
+		});
+		
+		resizeEndCall = function() {
+			if (new Date() - TIME.resizeTime < TIME.delay) {
+				setTimeout(resizeEndCall, TIME.delay);
+			} else {
+				TIME.resizeTimeout = false;
+				if (WINDOW_WIDTH !== $WINDOW.innerWidth || $DOCUMENT.documentElement.clientWidth || $DOCUMENTt.body.clientWidth) WINDOW_WIDTH = $WINDOW.innerWidth || $DOCUMENT.documentElement.clientWidth || $DOCUMENTt.body.clientWidth;
+				if (WINDOW_HEIGHT !== $WINDOW.innerHeight || $DOCUMENT.documentElement.clientHeight || $DOCUMENT.body.clientHeight) WINDOW_HEIGHT = $WINDOW.innerHeight || $DOCUMENT.documentElement.clientHeight || $DOCUMENT.body.clientHeight;
+				setLayout.checkDevice();
+				setLayout.execution();
+			}
+		}
+		scrollingCall = function() {
+			if (SCROLLTOP_POS !== ($WINDOW.pageYOffset || $DOCUMENT.documentElement.scrollTop) - ($DOCUMENT.clientTop || 0)) SCROLLTOP_POS = ($WINDOW.pageYOffset || $DOCUMENT.documentElement.scrollTop) - ($DOCUMENT.clientTop || 0);
+		}
+	</script>
+</body>
+</html>
